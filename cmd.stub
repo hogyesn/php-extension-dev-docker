@@ -1,0 +1,8 @@
+RUN echo '#!/bin/bash\n\
+echo "================================================="\n\
+echo "PHP Extension Development Environment - $command"\n\
+echo "================================================="\n\
+echo ""\n\
+echo "================================================="\n\
+' > /usr/local/bin/$command \
+    && chmod +x /usr/local/bin/$command
