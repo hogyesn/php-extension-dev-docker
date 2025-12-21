@@ -53,5 +53,51 @@ RUN php -v
 # Set the working directory
 WORKDIR /workspace
 
+# Create welcome message
+RUN echo '#!/bin/bash\n\
+echo "================================================="\n\
+echo "PHP Extension Development Environment"\n\
+echo "================================================="\n\
+echo ""\n\
+echo "Available commands:"\n\
+echo "  - create_skeleton <extension_name> [extension_dir]: Create a PHP extension skeleton"\n\
+echo ""\n\
+echo "Current PHP version:"\n\
+php -v | head -n1\n\
+echo ""\n\
+echo "Working directory: /workspace"\n\
+echo ""\n\
+echo "Happy extension development!"\n\
+echo "================================================="\n\
+' > /usr/local/bin/welcome \
+    && chmod +x /usr/local/bin/welcome
+
+# Create create_skeleton script
+RUN echo '#!/bin/bash\n\
+echo "================================================="\n\
+echo "PHP Extension Development Environment - create_skeleton"\n\
+echo "================================================="\n\
+echo ""\n\
+echo "================================================="\n\
+echo "Creating PHP extension skeleton..."\n\
+echo ""\n\
+if [ -z "$1" ]; then\n\
+	echo "Extension name required. Usage: create_skeleton <extension_name> [extension_dir]" \n\
+	exit 1\n\
+fi\n\
+EXTENSION_NAME="$1"\n\
+EXTENSION_DIR="$2"\n\
+if [ -z "$EXTENSION_DIR" ]; then\n\
+	EXTENSION_DIR="/workspace/extensions/$EXTENSION_NAME"\n\
+fi\n\
+mkdir -p "$EXTENSION_DIR"\n\
+php /usr/src/php-src/ext/ext_skel.php --ext "$EXTENSION_NAME" --dir "$EXTENSION_DIR"\n\
+echo "Extension skeleton created at $EXTENSION_DIR"\n\
+echo "================================================="\n\
+' > /usr/local/bin/create_skeleton \
+    && chmod +x /usr/local/bin/create_skeleton
+
+
 CMD [ "/bin/bash" ]
 
+RUN echo "welcome" >> /etc/bash.bashrc
