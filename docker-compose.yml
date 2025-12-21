@@ -1,0 +1,10 @@
+version: '3.8'
+
+services:
+  php-extension-dev:
+    build: .
+    container_name: php-extension-dev
+    tty: true
+    volumes:
+      - ./php.ini:/usr/local/php-bin/DEBUG/etc/php.ini
+      - ./extensions:/extensions

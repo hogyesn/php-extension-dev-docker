@@ -51,7 +51,8 @@ ENV PATH="$PHP_PREFIX/DEBUG/bin:$PATH"
 RUN php -v
 
 # Set the working directory
-WORKDIR /workspace
+RUN mkdir /extensions
+WORKDIR /extensions
 
 # Create welcome message
 RUN echo '#!/bin/bash\n\
@@ -65,7 +66,10 @@ echo ""\n\
 echo "Current PHP version:"\n\
 php -v | head -n1\n\
 echo ""\n\
-echo "Working directory: /workspace"\n\
+echo "php.ini location:"\n\
+echo $PHP_PREFIX/DEBUG/etc/php.ini\n\
+echo ""\n\
+echo "Working directory: /extensions"\n\
 echo ""\n\
 echo "Happy extension development!"\n\
 echo "================================================="\n\
@@ -88,7 +92,7 @@ fi\n\
 EXTENSION_NAME="$1"\n\
 EXTENSION_DIR="$2"\n\
 if [ -z "$EXTENSION_DIR" ]; then\n\
-	EXTENSION_DIR="/workspace/extensions/$EXTENSION_NAME"\n\
+	EXTENSION_DIR="/extensions/$EXTENSION_NAME"\n\
 fi\n\
 mkdir -p "$EXTENSION_DIR"\n\
 php /usr/src/php-src/ext/ext_skel.php --ext "$EXTENSION_NAME" --dir "$EXTENSION_DIR"\n\
