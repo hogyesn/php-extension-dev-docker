@@ -62,6 +62,7 @@ echo "================================================="\n\
 echo ""\n\
 echo "Available commands:"\n\
 echo "  - create_skeleton <extension_name> [extension_dir]: Create a PHP extension skeleton"\n\
+echo "  - build_extension <extension_dir>: Build and test the PHP extension"\n\
 echo ""\n\
 echo "Current PHP version:"\n\
 php -v | head -n1\n\
@@ -101,6 +102,40 @@ echo "================================================="\n\
 ' > /usr/local/bin/create_skeleton \
     && chmod +x /usr/local/bin/create_skeleton
 
+# Build and test the extension
+RUN echo '#!/bin/bash\n\
+echo "================================================="\n\
+echo "PHP Extension Development Environment - build_extension"\n\
+echo "================================================="\n\
+echo ""\n\
+echo "================================================="\n\
+if [ -z "$1" ]; then\n\
+	echo "Extension directory required. Usage: build_extension <extension_dir>" \n\
+	exit 1\n\
+fi\n\
+EXTENSION_DIR="$1"\n\
+cd "$EXTENSION_DIR"\n\
+phpize\n\
+./configure --with-php-config=$PHP_PREFIX/DEBUG/bin/php-config\n\
+make -j"$(nproc)"\n\
+make install\n\
+echo "Extension built and installed."\n\
+echo "================================================="\n\
+echo "Adding extension to php.ini if not already present..."\n\
+EXTENSION_NAME=$(basename "$EXTENSION_DIR")\n\
+if ! grep -q "extension=$EXTENSION_NAME.so" $PHP_PREFIX/DEBUG/etc/php.ini; then\n\
+	echo "extension=$EXTENSION_NAME.so" >> $PHP_PREFIX/DEBUG/etc/php.ini\n\
+	echo "Extension added to php.ini."\n\
+else\n\
+	echo "Extension already present in php.ini."\n\
+fi\n\
+echo "================================================="\n\
+echo "Running tests..."\n\
+php -m | grep "$EXTENSION_NAME" && echo "Extension $EXTENSION_NAME is loaded successfully." || echo "Extension $EXTENSION_NAME failed to load."\n\
+make test\n\
+echo "================================================="\n\
+' > /usr/local/bin/build_extension \
+	&& chmod +x /usr/local/bin/build_extension
 
 CMD [ "/bin/bash" ]
 
