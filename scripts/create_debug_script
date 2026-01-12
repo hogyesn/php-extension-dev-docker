@@ -1,0 +1,29 @@
+#!/bin/bash
+
+set -e
+
+echo "========================================================="
+echo "PHP Extension Development Environment (php $PHP_VERSION)"
+echo "========================================================="
+
+
+if [ -z "$1" ]; then
+	echo "Script name required. Usage: create_debug_script <script_name>" 
+	exit 1
+fi
+
+SCRIPT_NAME="$1"
+SCRIPT_PATH="/debug_scripts/$SCRIPT_NAME.php"
+
+echo "<?php" > "$SCRIPT_PATH"
+echo "" >> "$SCRIPT_PATH"
+echo "// Call the test function" >> "$SCRIPT_PATH"
+echo "test1();" >> "$SCRIPT_PATH"
+
+chmod +x "$SCRIPT_PATH"
+
+echo "Script created at $SCRIPT_PATH"
+echo "Now you can add breakpoints in your extension code"
+echo "Then run this command: debug_extension <extension_dir> $SCRIPT_PATH to debug the extension with this script"
+echo ""
+echo "========================================================="

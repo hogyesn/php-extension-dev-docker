@@ -1,0 +1,21 @@
+#!/bin/bash
+
+echo "========================================================="
+echo "PHP Extension Development Environment (php $PHP_VERSION)"
+echo "========================================================="
+echo "Available commands:"
+echo "  - create_skeleton <extension_name> [extension_dir]: Create a PHP extension skeleton"
+echo "  - build_extension <extension_dir> [debug|prod]: Build and test the PHP extension"
+echo "  - create_debug_script <script_name>: Create a sample PHP script for debugging"
+echo "  - debug_extension <extension_dir> <php_script> [port]: Debug the PHP extension"
+
+echo "Current PHP version:"
+php -v | head -n1
+
+echo "php.ini location:"
+echo $PHP_PREFIX/DEBUG/etc/php.ini
+
+echo "Working directory: /extensions"
+
+echo "Happy extension development!"
+echo "========================================================="

@@ -1,0 +1,36 @@
+#!/bin/bash
+
+set -e
+
+echo "========================================================="
+echo "PHP Extension Development Environment (php $PHP_VERSION)"
+echo "========================================================="
+
+if [ -z "$1" ]; then
+	echo "Extension directory required. Usage: debug_extension <extension_dir> <php_script>" 
+	exit 1
+fi
+
+if [ -z "$2" ]; then
+	echo "PHP script required. Usage: debug_extension <extension_dir> <php_script>" 
+	echo "You can create a sample script using create_debug_script command." 
+	exit 1
+fi
+
+if [ -z "$3" ]; then
+	GDBPORT=3333
+else
+	GDBPORT="$3"
+fi
+
+EXTENSION_DIR="$1"
+EXTENSION_NAME=$(basename "$EXTENSION_DIR")
+PHP_SCRIPT="$2"
+
+echo "Starting gdbserver on port $GDBPORT..."
+echo "You can now connect your debugger to localhost:$GDBPORT"
+echo "Running PHP script: /debug_scripts/$PHP_SCRIPT"
+
+echo "========================================================="
+echo "gdbserver :$GDBPORT $PHP_PREFIX/DEBUG/bin/php -n -d extension=/extensions/$EXTENSION_DIR/modules/$EXTENSION_NAME.so -d $EXTENSION_NAME.enabled=1 /debug_scripts/$PHP_SCRIPT"
+gdbserver :$GDBPORT $PHP_PREFIX/DEBUG/bin/php -n -d extension=/extensions/$EXTENSION_DIR/modules/$EXTENSION_NAME.so -d $EXTENSION_NAME.enabled=1 /debug_scripts/$PHP_SCRIPT

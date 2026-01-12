@@ -1,6 +1,7 @@
 FROM debian:bookworm-slim
 
 ARG PHP_VERSION=8.3.0
+ENV PHP_VERSION=${PHP_VERSION}
 
 # Set non-interactive mode for apt
 ENV DEBIAN_FRONTEND=noninteractive
@@ -20,7 +21,10 @@ RUN apt-get update && apt-get install -y \
     valgrind \
     git \
     libxml2-dev \
-    libsqlite3-dev
+    libsqlite3-dev \
+    wget \
+    curl \
+    gdbserver
 
 ENV PHP_PREFIX=/usr/local/php-bin
 
@@ -38,6 +42,7 @@ RUN ./configure --enable-debug \
     --with-config-file-path=$PHP_PREFIX/DEBUG/etc
 
 # Compile and install PHP
+RUN make clean
 RUN make -j"$(nproc)"
 RUN make install
 # Create a php.ini file
@@ -50,92 +55,31 @@ ENV PATH="$PHP_PREFIX/DEBUG/bin:$PATH"
 # Verify the installation
 RUN php -v
 
+RUN mkdir /debug_scripts
+
 # Set the working directory
 RUN mkdir /extensions
 WORKDIR /extensions
 
 # Create welcome message
-RUN echo '#!/bin/bash\n\
-echo "================================================="\n\
-echo "PHP Extension Development Environment"\n\
-echo "================================================="\n\
-echo ""\n\
-echo "Available commands:"\n\
-echo "  - create_skeleton <extension_name> [extension_dir]: Create a PHP extension skeleton"\n\
-echo "  - build_extension <extension_dir>: Build and test the PHP extension"\n\
-echo ""\n\
-echo "Current PHP version:"\n\
-php -v | head -n1\n\
-echo ""\n\
-echo "php.ini location:"\n\
-echo $PHP_PREFIX/DEBUG/etc/php.ini\n\
-echo ""\n\
-echo "Working directory: /extensions"\n\
-echo ""\n\
-echo "Happy extension development!"\n\
-echo "================================================="\n\
-' > /usr/local/bin/welcome \
-    && chmod +x /usr/local/bin/welcome
+COPY scripts/welcome /usr/local/bin/welcome
+RUN chmod +x /usr/local/bin/welcome
 
 # Create create_skeleton script
-RUN echo '#!/bin/bash\n\
-echo "================================================="\n\
-echo "PHP Extension Development Environment - create_skeleton"\n\
-echo "================================================="\n\
-echo ""\n\
-echo "================================================="\n\
-echo "Creating PHP extension skeleton..."\n\
-echo ""\n\
-if [ -z "$1" ]; then\n\
-	echo "Extension name required. Usage: create_skeleton <extension_name> [extension_dir]" \n\
-	exit 1\n\
-fi\n\
-EXTENSION_NAME="$1"\n\
-EXTENSION_DIR="$2"\n\
-if [ -z "$EXTENSION_DIR" ]; then\n\
-	EXTENSION_DIR="/extensions/$EXTENSION_NAME"\n\
-fi\n\
-mkdir -p "$EXTENSION_DIR"\n\
-php /usr/src/php-src/ext/ext_skel.php --ext "$EXTENSION_NAME" --dir "$EXTENSION_DIR"\n\
-echo "Extension skeleton created at $EXTENSION_DIR"\n\
-echo "================================================="\n\
-' > /usr/local/bin/create_skeleton \
-    && chmod +x /usr/local/bin/create_skeleton
+COPY scripts/create_skeleton /usr/local/bin/create_skeleton
+RUN chmod +x /usr/local/bin/create_skeleton
 
 # Build and test the extension
-RUN echo '#!/bin/bash\n\
-echo "================================================="\n\
-echo "PHP Extension Development Environment - build_extension"\n\
-echo "================================================="\n\
-echo ""\n\
-echo "================================================="\n\
-if [ -z "$1" ]; then\n\
-	echo "Extension directory required. Usage: build_extension <extension_dir>" \n\
-	exit 1\n\
-fi\n\
-EXTENSION_DIR="$1"\n\
-cd "$EXTENSION_DIR"\n\
-phpize\n\
-./configure --with-php-config=$PHP_PREFIX/DEBUG/bin/php-config\n\
-make -j"$(nproc)"\n\
-make install\n\
-echo "Extension built and installed."\n\
-echo "================================================="\n\
-echo "Adding extension to php.ini if not already present..."\n\
-EXTENSION_NAME=$(basename "$EXTENSION_DIR")\n\
-if ! grep -q "extension=$EXTENSION_NAME.so" $PHP_PREFIX/DEBUG/etc/php.ini; then\n\
-	echo "extension=$EXTENSION_NAME.so" >> $PHP_PREFIX/DEBUG/etc/php.ini\n\
-	echo "Extension added to php.ini."\n\
-else\n\
-	echo "Extension already present in php.ini."\n\
-fi\n\
-echo "================================================="\n\
-echo "Running tests..."\n\
-php -m | grep "$EXTENSION_NAME" && echo "Extension $EXTENSION_NAME is loaded successfully." || echo "Extension $EXTENSION_NAME failed to load."\n\
-make test\n\
-echo "================================================="\n\
-' > /usr/local/bin/build_extension \
-	&& chmod +x /usr/local/bin/build_extension
+COPY scripts/build_extension /usr/local/bin/build_extension
+RUN chmod +x /usr/local/bin/build_extension
+
+# Create debug_extension script
+COPY scripts/debug_extension /usr/local/bin/debug_extension
+RUN chmod +x /usr/local/bin/debug_extension
+
+# Create debug PHP script
+COPY scripts/create_debug_script /usr/local/bin/create_debug_script
+RUN chmod +x /usr/local/bin/create_debug_script
 
 CMD [ "/bin/bash" ]
 

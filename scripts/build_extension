@@ -1,0 +1,49 @@
+#!/bin/bash
+
+set -e
+
+echo "========================================================="
+echo "PHP Extension Development Environment (php $PHP_VERSION)"
+echo "========================================================="
+
+if [ -z "$1" ]; then
+	echo "Extension directory required. Usage: build_extension <extension_dir>" 
+	exit 1
+fi
+
+EXTENSION_DIR="$1"
+cd "$EXTENSION_DIR"
+
+phpize
+./configure --enable-debug --enable-$EXTENSION_NAME --with-php-config=$PHP_PREFIX/DEBUG/bin/php-config
+
+make clean
+
+if [ "$2" != "prod" ] || [ -z "$2" ]; then
+	echo "Building extension in debug mode..."
+	make -j"$(nproc)" CFLAGS="-g -O0" LDFLAGS="-g"
+else
+	echo "Building extension in production mode..."
+	make -j"$(nproc)" CFLAGS="-O2 -DNDEBUG"
+fi
+
+make install
+
+echo "Extension built and installed."
+
+
+echo "========================================================="
+echo "Adding extension to php.ini if not already present..."
+EXTENSION_NAME=$(basename "$EXTENSION_DIR")
+if ! grep -q "extension=$EXTENSION_NAME.so" $PHP_PREFIX/DEBUG/etc/php.ini; then
+	echo "extension=$EXTENSION_NAME.so" >> $PHP_PREFIX/DEBUG/etc/php.ini
+	echo "Extension added to php.ini."
+else
+	echo "Extension already present in php.ini."
+fi
+
+echo "========================================================="
+echo "Running tests..."
+php -m | grep "$EXTENSION_NAME" && echo "Extension $EXTENSION_NAME is loaded successfully." || echo "Extension $EXTENSION_NAME failed to load."
+make test
+echo "========================================================="

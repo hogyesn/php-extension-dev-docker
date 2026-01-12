@@ -1,0 +1,22 @@
+#!/bin/bash
+
+set -e
+
+echo "========================================================="
+echo "PHP Extension Development Environment (php $PHP_VERSION)"
+echo "========================================================="
+echo "Creating PHP extension skeleton..."
+
+if [ -z "$1" ]; then
+	echo "Extension name required. Usage: create_skeleton <extension_name> [extension_dir]"
+	exit 1
+fi
+EXTENSION_NAME="$1"
+EXTENSION_DIR="$2"
+if [ -z "$EXTENSION_DIR" ]; then
+	EXTENSION_DIR="/extensions/$EXTENSION_NAME"
+fi
+mkdir -p "$EXTENSION_DIR"
+php /usr/src/php-src/ext/ext_skel.php --ext "$EXTENSION_NAME" --dir "$EXTENSION_DIR"
+echo "Extension skeleton created at $EXTENSION_DIR"
+echo "========================================================="
