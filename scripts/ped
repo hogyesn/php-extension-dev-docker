@@ -1,0 +1,142 @@
+#!/bin/bash
+# ped - PHP Extension Development CLI
+# Main router for all extension development commands
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Source libraries
+source "$SCRIPT_DIR/lib/colors.sh"
+source "$SCRIPT_DIR/lib/common.sh"
+source "$SCRIPT_DIR/lib/projects.sh"
+
+VERSION="1.0.0"
+COMMANDS_DIR="$SCRIPT_DIR/commands"
+
+show_version() {
+    echo "ped version $VERSION"
+}
+
+show_help() {
+    echo -e "${BOLD}ped${RESET} - PHP Extension Development CLI"
+    echo -e ""
+    echo -e "${BOLD}USAGE:${RESET}"
+    echo -e "    ped <command> [options] [arguments]"
+    echo -e ""
+    echo -e "${BOLD}COMMANDS:${RESET}"
+    echo -e "    new [name]              Create a new extension project (interactive if no name)"
+    echo -e "    build [project]         Build extension (uses current dir or last project)"
+    echo -e "    stub [project]          Update stub file (regenerate arginfo)"
+    echo -e "    debug <project> <script>  Debug extension with gdbserver"
+    echo -e "    test [project]          Run extension tests"
+    echo -e "    script <name> <project> Create a debug script (alias: new-script)"
+    echo -e "    list                    List all registered projects"
+    echo -e "    project                 Manage project registry (add/remove/show)"
+    echo -e "    help [command]          Show help for a command"
+    echo -e ""
+    echo -e "${BOLD}OPTIONS:${RESET}"
+    echo -e "    -h, --help              Show this help message"
+    echo -e "    -v, --version           Show version"
+    echo -e "    --no-color              Disable colored output"
+    echo -e ""
+    echo -e "${BOLD}EXAMPLES:${RESET}"
+    echo -e "    ped new my_extension"
+    echo -e "    ped build my_extension"
+    echo -e "    ped build                    # Build current directory or last project"
+    echo -e "    ped stub my_extension        # Update arginfo from stub file"
+    echo -e "    ped debug my_extension test.php"
+    echo -e "    ped debug my_extension test.php --port=3334"
+    echo -e "    ped test my_extension"
+    echo -e "    ped list"
+    echo -e "    ped project show my_extension"
+    echo -e ""
+    echo -e "${BOLD}PROJECT RESOLUTION:${RESET}"
+    echo -e "    Projects can be referenced by:"
+    echo -e "    - Registered project name (from projects.json)"
+    echo -e "    - Direct path to extension directory"
+    echo -e "    - Extension name under /extensions"
+    echo -e ""
+}
+
+show_command_help() {
+    local cmd="$1"
+    local cmd_file="$COMMANDS_DIR/$cmd.sh"
+    
+    if [[ -f "$cmd_file" ]]; then
+        source "$cmd_file"
+        if declare -f "cmd_${cmd}_help" &>/dev/null; then
+            "cmd_${cmd}_help"
+        else
+            error "No help available for: $cmd"
+        fi
+    else
+        error "Unknown command: $cmd"
+        echo "Run 'ped help' for available commands."
+        exit 1
+    fi
+}
+
+# Parse global options
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        -h|--help)
+            show_help
+            exit 0
+            ;;
+        -v|--version)
+            show_version
+            exit 0
+            ;;
+        --no-color)
+            export NO_COLOR=1
+            shift
+            ;;
+        -*)
+            error "Unknown option: $1"
+            echo "Run 'ped --help' for usage information."
+            exit 1
+            ;;
+        *)
+            break
+            ;;
+    esac
+done
+
+# Get command
+COMMAND="${1:-}"
+shift || true
+
+# No command provided
+if [[ -z "$COMMAND" ]]; then
+    show_help
+    exit 0
+fi
+
+# Handle help command specially
+if [[ "$COMMAND" == "help" ]]; then
+    if [[ -n "${1:-}" ]]; then
+        show_command_help "$1"
+    else
+        show_help
+    fi
+    exit 0
+fi
+
+# Command aliases
+case "$COMMAND" in
+    new-script)
+        COMMAND="script"
+        ;;
+esac
+
+# Dispatch to command
+COMMAND_FILE="$COMMANDS_DIR/$COMMAND.sh"
+if [[ -f "$COMMAND_FILE" ]]; then
+    source "$COMMAND_FILE"
+    "cmd_$COMMAND" "$@"
+else
+    error "Unknown command: $COMMAND"
+    echo "Run 'ped help' for available commands."
+    exit 1
+fi

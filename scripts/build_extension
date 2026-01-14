@@ -2,6 +2,9 @@
 
 set -e
 
+echo -e "\033[0;33m⚠ DEPRECATED: Use 'ped build <project>' instead\033[0m"
+echo ""
+
 echo "========================================================="
 echo "PHP Extension Development Environment (php $PHP_VERSION)"
 echo "========================================================="
@@ -12,6 +15,7 @@ if [ -z "$1" ]; then
 fi
 
 EXTENSION_DIR="$1"
+EXTENSION_NAME=$(basename "$EXTENSION_DIR")
 cd "$EXTENSION_DIR"
 
 phpize
@@ -19,12 +23,12 @@ phpize
 
 make clean
 
-if [ "$2" != "prod" ] || [ -z "$2" ]; then
-	echo "Building extension in debug mode..."
-	make -j"$(nproc)" CFLAGS="-g -O0" LDFLAGS="-g"
-else
+if [ "$2" = "prod" ]; then
 	echo "Building extension in production mode..."
 	make -j"$(nproc)" CFLAGS="-O2 -DNDEBUG"
+else
+	echo "Building extension in debug mode..."
+	make -j"$(nproc)" CFLAGS="-g -O0" LDFLAGS="-g"
 fi
 
 make install
@@ -34,7 +38,6 @@ echo "Extension built and installed."
 
 echo "========================================================="
 echo "Adding extension to php.ini if not already present..."
-EXTENSION_NAME=$(basename "$EXTENSION_DIR")
 if ! grep -q "extension=$EXTENSION_NAME.so" $PHP_PREFIX/DEBUG/etc/php.ini; then
 	echo "extension=$EXTENSION_NAME.so" >> $PHP_PREFIX/DEBUG/etc/php.ini
 	echo "Extension added to php.ini."

@@ -2,6 +2,9 @@
 
 set -e
 
+echo -e "\033[0;33m⚠ DEPRECATED: Use 'ped new' instead for better project management\033[0m"
+echo ""
+
 echo "========================================================="
 echo "PHP Extension Development Environment (php $PHP_VERSION)"
 echo "========================================================="

@@ -3,14 +3,17 @@
 echo "========================================================="
 echo "PHP Extension Development Environment (php $PHP_VERSION)"
 echo "========================================================="
-echo "Available commands:"
-echo "  - create_skeleton <extension_name> [extension_dir]: Create a PHP extension skeleton"
-echo "  - build_extension <extension_dir> [debug|prod]: Build and test the PHP extension"
-echo "  - create_debug_script <script_name>: Create a sample PHP script for debugging"
-echo "  - debug_extension <extension_dir> <php_script> [port]: Debug the PHP extension"
-
-echo "Current PHP version:"
-php -v | head -n1
+echo ""
+echo "CLI Tool 'ped' is now available to manage your extension projects."
+echo "  - ped new [name]                    Create a new extension project"
+echo "  - ped build [project]               Build extension"
+echo "  - ped debug <project> <script>      Debug extension with gdbserver"
+echo "  - ped test [project]                Run tests"
+echo "  - ped script <name> [project]       Create debug script"
+echo "  - ped list                          List registered projects"
+echo "  - ped project add|remove|show       Manage project registry"
+echo "  - ped help [command]                Show help"
+echo ""
 
 echo "php.ini location:"
 echo $PHP_PREFIX/DEBUG/etc/php.ini

@@ -24,7 +24,8 @@ RUN apt-get update && apt-get install -y \
     libsqlite3-dev \
     wget \
     curl \
-    gdbserver
+    gdbserver \
+    jq
 
 ENV PHP_PREFIX=/usr/local/php-bin
 
@@ -81,6 +82,14 @@ RUN chmod +x /usr/local/bin/debug_extension
 COPY scripts/create_debug_script /usr/local/bin/create_debug_script
 RUN chmod +x /usr/local/bin/create_debug_script
 
+# Install ped CLI and libraries
+COPY scripts/lib /usr/local/bin/lib
+COPY scripts/commands /usr/local/bin/commands
+COPY scripts/ped /usr/local/bin/ped
+RUN chmod +x /usr/local/bin/ped
+
 CMD [ "/bin/bash" ]
 
 RUN echo "welcome" >> /etc/bash.bashrc
+RUN echo 'echo ""' >> /etc/bash.bashrc
+RUN echo 'echo "Type \"ped\" for the new unified CLI"' >> /etc/bash.bashrc
