@@ -95,7 +95,7 @@ cmd_build() {
         make -j"$(nproc)" CFLAGS="-O2 -DNDEBUG"
     else
         info "Building in debug mode..."
-        make -j"$(nproc)" CFLAGS="-g -O0" LDFLAGS="-g"
+        make -j"$(nproc)" CFLAGS="-O0 -ggdb3" LDFLAGS="-ggdb3"
     fi
     
     # Install

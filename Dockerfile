@@ -40,7 +40,9 @@ RUN git checkout "PHP-${PHP_VERSION}"
 RUN ./buildconf --force
 RUN ./configure --enable-debug \
     --prefix=$PHP_PREFIX/DEBUG \
-    --with-config-file-path=$PHP_PREFIX/DEBUG/etc
+    --with-config-file-path=$PHP_PREFIX/DEBUG/etc \
+	CFLAGS="-O0 -ggdb3" \
+    LDFLAGS="-ggdb3"
 
 # Compile and install PHP
 RUN make clean
