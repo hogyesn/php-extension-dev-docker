@@ -3,7 +3,10 @@ name: Docker Image CI
 on:
   push:
     branches:
-      - develop
+      - main
+
+env:
+  LATEST_VERSION: "8.5.1"
 
 jobs:
 
@@ -41,3 +44,4 @@ jobs:
           PHP_VERSION=${{ matrix.version }}
         tags: |
           ${{ secrets.DOCKERHUB_USERNAME }}/php-extension-dev:${{ matrix.version }}
+          ${{ matrix.version == env.LATEST_VERSION && format('{0}/php-extension-dev:latest', secrets.DOCKERHUB_USERNAME) || '' }}
