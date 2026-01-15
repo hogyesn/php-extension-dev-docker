@@ -125,8 +125,8 @@ cmd_new() {
     
     echo
     info "Next steps:"
-    echo "  1. Edit ${BOLD}$dir/$name/${name}.c${RESET} to add your extension code"
-    echo "  2. Run ${BOLD}ped build $name${RESET} to build the extension"
-    echo "  3. Run ${BOLD}ped test $name${RESET} to run tests"
+    echo -e "  1. Edit ${BOLD}$dir/$name/${name}.c${RESET} to add your extension code"
+    echo -e "  2. Run ${BOLD}ped build $name${RESET} to build the extension"
+    echo -e "  3. Run ${BOLD}ped test $name${RESET} to run tests"
     echo "========================================================="
 }

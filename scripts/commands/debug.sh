@@ -238,7 +238,7 @@ cmd_debug() {
         info "Saved debug port: $port"
     fi
     
-    echo "Connect your debugger to: ${BOLD}localhost:$port${RESET}"
+    echo -e "Connect your debugger to: ${BOLD}localhost:$port${RESET}"
     echo "========================================================="
     echo
     

@@ -120,7 +120,7 @@ cmd_list() {
             # Detailed output with debug scripts
             while IFS= read -r project_name; do
                 if [[ -n "$project_name" ]]; then
-                    echo "  ${BOLD}$project_name${RESET}:"
+                    echo -e "  ${BOLD}$project_name${RESET}:"
                     local path mode port created last_built
                     path=$(jq -r ".projects[\"$project_name\"].path" "$PROJECTS_FILE")
                     mode=$(jq -r ".projects[\"$project_name\"].build_mode" "$PROJECTS_FILE")
@@ -157,7 +157,7 @@ cmd_list() {
     else
         info "No projects found"
         echo
-        echo "Create a new project with: ${BOLD}ped new <name>${RESET}"
+        echo -e "Create a new project with: ${BOLD}ped new <name>${RESET}"
     fi
     
     echo "========================================================="

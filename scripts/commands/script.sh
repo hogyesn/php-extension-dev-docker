@@ -105,7 +105,7 @@ EOF
     
     echo
     info "To debug with this script:"
-    echo "  ${BOLD}ped debug $project $script_name${RESET}"
+    echo -e "  ${BOLD}ped debug $project $script_name${RESET}"
     
     echo "========================================================="
 }
