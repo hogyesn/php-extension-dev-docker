@@ -1,6 +1,9 @@
 #!/bin/bash
 # ped - PHP Extension Development CLI
 # Main router for all extension development commands
+#
+# Author: hogyesn
+# License: MIT
 
 set -euo pipefail
 
