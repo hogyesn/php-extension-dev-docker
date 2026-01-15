@@ -1,0 +1,142 @@
+#!/usr/bin/env bash
+# Wrapper script for ped CLI inside Docker container
+#
+# Author: hogyesn
+# License: MIT
+
+set -e
+
+# Function to start a new container
+start_container() {
+    local container_name="php-extension-dev"
+    local image_tag="latest"
+    
+    echo "No running container found." >&2
+    echo "" >&2
+    
+    # Check if a stopped container exists
+    if docker ps -a --format '{{.Names}}' | grep -q "^${container_name}$"; then
+        echo "Found stopped container '$container_name'." >&2
+        read -p "Restart it? (y/n): " -n 1 -r
+        echo >&2
+        if [[ $REPLY =~ ^[Yy]$ ]]; then
+            docker start "$container_name"
+            echo "Container '$container_name' restarted successfully!" >&2
+            echo "" >&2
+            CONTAINER_NAME="$container_name"
+            return
+        else
+            read -p "Remove old container and create new one? (y/n): " -n 1 -r
+            echo >&2
+            if [[ $REPLY =~ ^[Yy]$ ]]; then
+                docker rm "$container_name"
+            else
+                echo "Aborted." >&2
+                exit 1
+            fi
+        fi
+    fi
+    
+    echo "Starting a new container..." >&2
+    echo "" >&2
+    
+    # Create directories if they don't exist
+    mkdir -p extensions debug_scripts
+    
+    # Ask for image tag
+    read -p "Enter image tag (default: latest): " user_tag
+    if [[ -n "$user_tag" ]]; then
+        image_tag="$user_tag"
+    fi
+    
+    # Start the container with -t to keep it running
+    docker run -d -t --name "$container_name" \
+        -v "$(pwd)/extensions:/extensions" \
+        -v "$(pwd)/debug_scripts:/debug_scripts" \
+        -p 3333:3333 \
+        --cap-add=SYS_PTRACE \
+        --security-opt seccomp=unconfined \
+        "hogyesn/php-extension-dev:${image_tag}"
+    
+    echo "" >&2
+    echo "Container '$container_name' started successfully!" >&2
+    echo "" >&2
+    
+    CONTAINER_NAME="$container_name"
+}
+
+# Detect container name
+CONTAINER_NAME=""
+
+# Try to find container from docker-compose.yml
+if [[ -f "docker-compose.yml" ]] || [[ -f "compose.yml" ]]; then
+    # Extract service name from compose file
+    SERVICE_NAME=$(grep -A 5 "services:" docker-compose.yml 2>/dev/null | grep -v "^#" | grep ":" | head -2 | tail -1 | sed 's/:.*//' | tr -d ' ' || echo "")
+    if [[ -z "$SERVICE_NAME" ]] && [[ -f "compose.yml" ]]; then
+        SERVICE_NAME=$(grep -A 5 "services:" compose.yml 2>/dev/null | grep -v "^#" | grep ":" | head -2 | tail -1 | sed 's/:.*//' | tr -d ' ' || echo "")
+    fi
+    
+    # Try to find container name from compose project
+    if [[ -n "$SERVICE_NAME" ]]; then
+        PROJECT_NAME=$(basename "$(pwd)" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9_-]//g')
+        # Try different naming patterns that docker-compose might use
+        for pattern in "${PROJECT_NAME}-${SERVICE_NAME}-1" "${PROJECT_NAME}_${SERVICE_NAME}_1" "${SERVICE_NAME}"; do
+            if docker ps --format '{{.Names}}' | grep -q "^${pattern}$"; then
+                CONTAINER_NAME="$pattern"
+                break
+            fi
+        done
+        
+        # If still not found, try grep for service name
+        if [[ -z "$CONTAINER_NAME" ]]; then
+            CONTAINER_NAME=$(docker ps --format '{{.Names}}' | grep "${SERVICE_NAME}" | head -1 || echo "")
+        fi
+    fi
+fi
+
+# If not found via compose, look for any running container with common names
+if [[ -z "$CONTAINER_NAME" ]]; then
+    for name in "php-extension-dev" "php-ext-dev" "ext-dev"; do
+        if docker ps --format '{{.Names}}' | grep -q "^${name}$"; then
+            CONTAINER_NAME="$name"
+            break
+        fi
+    done
+fi
+
+# If still not found, try to find any container with the image
+if [[ -z "$CONTAINER_NAME" ]]; then
+    CONTAINER_NAME=$(docker ps --format '{{.Names}}' --filter ancestor=hogyesn/php-extension-dev | head -1 || echo "")
+fi
+
+# If no container found and docker-compose.yml exists, suggest using docker-compose
+if [[ -z "$CONTAINER_NAME" ]] && [[ -f "docker-compose.yml" ]]; then
+    echo "Error: No running container found." >&2
+    echo "" >&2
+    echo "Detected docker-compose.yml. Please start with:" >&2
+    echo "  docker-compose up -d" >&2
+    echo "" >&2
+    exit 1
+fi
+
+# If still no container, offer to start one
+if [[ -z "$CONTAINER_NAME" ]]; then
+    read -p "No running container found. Start a new one? (y/n): " -n 1 -r
+    echo >&2
+    if [[ $REPLY =~ ^[Yy]$ ]]; then
+        start_container
+    else
+        echo "Aborted." >&2
+        exit 1
+    fi
+fi
+
+# Verify container is running
+if ! docker ps --format '{{.Names}}' | grep -q "^${CONTAINER_NAME}$"; then
+    echo "Error: Container '$CONTAINER_NAME' is not running." >&2
+    echo "Start it with: docker start $CONTAINER_NAME" >&2
+    exit 1
+fi
+
+# Execute command in container
+docker exec -it "$CONTAINER_NAME" ped "$@"
