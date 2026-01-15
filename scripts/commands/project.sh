@@ -67,8 +67,8 @@ cmd_project() {
 }
 
 project_add() {
-    local name="$1"
-    local path="$2"
+    local name="${1:-}"
+    local path="${2:-}"
     local build_mode="${3:-debug}"
     local debug_port="${4:-3333}"
     
@@ -99,7 +99,7 @@ project_add() {
 }
 
 project_remove() {
-    local name="$1"
+    local name="${1:-}"
     
     if [[ -z "$name" ]]; then
         error "Project name required"
@@ -113,7 +113,7 @@ project_remove() {
 }
 
 project_show() {
-    local name="$1"
+    local name="${1:-}"
     
     if [[ -z "$name" ]]; then
         error "Project name required"
@@ -149,9 +149,9 @@ project_show() {
 }
 
 project_set() {
-    local name="$1"
-    local key="$2"
-    local value="$3"
+    local name="${1:-}"
+    local key="${2:-}"
+    local value="${3:-}"
     
     if [[ -z "$name" ]] || [[ -z "$key" ]] || [[ -z "$value" ]]; then
         error "Name, key, and value required"
