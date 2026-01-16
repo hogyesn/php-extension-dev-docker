@@ -251,5 +251,5 @@ cmd_debug() {
     echo
     
     # Start gdbserver
-    gdbserver ":$port" "$php_cmd" -n -d "extension=$module_path" -d "$extension_name.enabled=1" "$script_path"
+    gdbserver ":$port" "$php_cmd" -d "extension=$module_path" -d "$extension_name.enabled=1" "$script_path"
 }
