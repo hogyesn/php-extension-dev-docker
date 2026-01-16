@@ -161,3 +161,7 @@ nano debug_scripts/mjml/test.php
 MIT License - See [LICENSE](LICENSE) file for details.
 
 Copyright (c) 2026 hogyesn
+
+## Notes
+
+The ped CLI was quickly scaffolded with the help of AI-assisted coding tools and then reviewed and refined manually.
